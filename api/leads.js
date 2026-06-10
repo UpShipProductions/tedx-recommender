@@ -45,7 +45,7 @@ module.exports = async function handler(req, res) {
       RETURNING id
     `;
 
-    const newId = result.rows[0].id;
+    const newId = result[0]?.id || 1;
     return res.status(200).json({ success: true, id: newId });
   } catch (err) {
     console.error('Leads DB error:', err);
