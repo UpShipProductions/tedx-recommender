@@ -1,4 +1,6 @@
-import { sql } from '@vercel/postgres';
+import postgres from 'postgres';
+
+const sql = postgres(process.env.POSTGRES_URL, { ssl: 'require' });
 
 async function ensureTable() {
   await sql`
@@ -43,10 +45,4 @@ export default async function handler(req, res) {
       RETURNING id
     `;
 
-    const newId = result.rows[0].id;
-    return res.status(200).json({ success: true, id: newId });
-  } catch (err) {
-    console.error('Leads DB error:', err);
-    return res.status(500).json({ error: 'Database error', details: err.message });
-  }
-}
+    const ne
