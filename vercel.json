@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/api/claude", "destination": "/api/claude" },
+    { "source": "/api/youtube", "destination": "/api/youtube" },
+    { "source": "/api/leads", "destination": "/api/leads" }
+  ]
+}

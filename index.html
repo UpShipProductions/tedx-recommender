@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TEDx Speaker Recommender</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red: #e62b1e;
+      --red-dark: #c0241a;
+      --red-light: #fdf2f2;
+      --text: #111;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+      --bg: #f9f9f9;
+      --white: #ffffff;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    .header {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .header-logo {
+      background: var(--red);
+      color: white;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      padding: 5px 10px;
+      border-radius: 6px;
+    }
+
+    .header-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .header-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .progress-bar {
+      height: 3px;
+      background: var(--border);
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--red);
+      transition: width 0.5s ease;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 36px 32px;
+    }
+
+    @media (max-width: 480px) {
+      .card { padding: 28px 20px; }
+      .container { padding: 24px 16px 60px; }
+    }
+
+    .step-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 8px;
+    }
+
+    .step-title {
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 6px;
+    }
+
+    .step-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+
+    .field { margin-bottom: 18px; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    input, textarea {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 14px;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--white);
+      transition: border-color 0.15s;
+      outline: none;
+    }
+
+    input:focus, textarea:focus { border-color: var(--red); }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 13px 24px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: background 0.15s, transform 0.1s;
+      width: 100%;
+    }
+
+    .btn-primary { background: var(--red); color: white; }
+    .btn-primary:hover { background: var(--red-dark); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 13px;
+      padding: 8px;
+      width: auto;
+      margin-top: 10px;
+    }
+
+    .btn-ghost:hover { color: var(--text); }
+
+    .privacy-note {
+      margin-top: 14px;
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .loader {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      padding: 20px 0;
+      text-align: center;
+    }
+
+    .spinner {
+      width: 44px;
+      height: 44px;
+      border: 3px solid var(--border);
+      border-top-color: var(--red);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loader-status {
+      font-size: 14px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .loader-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    .loader-step {
+      font-size: 12px;
+      color: var(--border);
+      transition: color 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .loader-step.active { color: var(--text-muted); }
+    .loader-step.done { color: var(--red); }
+
+    .loader-step-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+    }
+
+    .results-header { margin-bottom: 24px; }
+
+    .results-count {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .talk-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 16px;
+      transition: box-shadow 0.2s;
+    }
+
+    .talk-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
+
+    .talk-card a {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    .talk-thumbnail {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      display: block;
+      background: var(--border);
+    }
+
+    .talk-body { padding: 18px 20px; }
+
+    .talk-rank-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .talk-rank {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .match-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 20px;
+      letter-spacing: 0.04em;
+    }
+
+    .match-high { background: #fee2e2; color: #b91c1c; }
+    .match-medium { background: #fef3c7; color: #b45309; }
+    .match-low { background: #f3f4f6; color: #6b7280; }
+
+    .talk-title {
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.35;
+      margin-bottom: 8px;
+    }
+
+    .talk-reason {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+
+    .talk-channel {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .watch-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--red);
+      text-decoration: none;
+      margin-top: 10px;
+    }
+
+    .watch-link:hover { text-decoration: underline; }
+
+    .error-box {
+      background: #fdf2f2;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 13px;
+      color: #b91c1c;
+      margin-bottom: 16px;
+    }
+
+    .restart-row {
+      text-align: center;
+      margin-top: 32px;
+    }
+
+    .restart-btn {
+      font-size: 13px;
+      color: var(--text-muted);
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 18px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .restart-btn:hover { border-color: var(--text-muted); color: var(--text); }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="header-logo">TEDx</div>
+    <div>
+      <div class="header-title">Speaker Recommender</div>
+      <div class="header-subtitle">Find talks that align with yours</div>
+    </div>
+  </div>
+
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+  </div>
+
+  <div class="container">
+
+    <div class="card" id="step1">
+      <div class="step-eyebrow">Step 1 of 2</div>
+      <div class="step-title">Find your ideal TEDx talks</div>
+      <div class="step-desc">Enter your details to get personalised talk recommendations based on your own idea worth spreading.</div>
+
+      <div id="step1Error" class="error-box hidden"></div>
+
+      <div class="field">
+        <label for="name">Your name</label>
+        <input type="text" id="name" placeholder="Jane Smith" autocomplete="name" />
+      </div>
+      <div class="field">
+        <label for="email">Email address</label>
+        <input type="email" id="email" placeholder="jane@example.com" autocomplete="email" />
+      </div>
+
+      <button class="btn btn-primary" id="step1Btn" onclick="submitGate()">
+        Continue
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+
+      <div class="privacy-note">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1L2 3v3c0 2.5 1.8 4.7 4 5 2.2-.3 4-2.5 4-5V3L6 1z" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
+        No spam, ever. Your information is kept private.
+      </div>
+    </div>
+
+    <div class="card hidden" id="step2">
+      <div class="step-eyebrow">Step 2 of 2</div>
+      <div class="step-title">Tell us about your talk</div>
+      <div class="step-desc">The more specific you are, the better your recommendations will be.</div>
+
+      <div id="step2Error" class="error-box hidden"></div>
+
+      <div class="field">
+        <label for="talkTitle">Talk title or working title</label>
+        <input type="text" id="talkTitle" placeholder="e.g. Why introverts make better leaders" />
+      </div>
+      <div class="field">
+        <label for="mainIdea">Your main idea</label>
+        <textarea id="mainIdea" placeholder="Describe your core idea or argument in 2–3 sentences…"></textarea>
+      </div>
+      <div class="field">
+        <label for="themes">Key themes</label>
+        <input type="text" id="themes" placeholder="e.g. leadership, introverts, psychology, workplace" />
+      </div>
+      <div class="field">
+        <label for="audience">Target audience</label>
+        <input type="text" id="audience" placeholder="e.g. managers, HR professionals, young leaders" />
+      </div>
+
+      <button class="btn btn-primary" id="step2Btn" onclick="submitTalk()">
+        Find my recommendations
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+
+      <div style="text-align:center">
+        <button class="btn btn-ghost" onclick="goBack()">← Back</button>
+      </div>
+    </div>
+
+    <div class="card hidden" id="stepLoading">
+      <div class="loader">
+        <div class="spinner"></div>
+        <div class="loader-status" id="loaderStatus">Getting started…</div>
+        <div class="loader-steps">
+          <div class="loader-step" id="loadStep1">
+            <div class="loader-step-dot"></div>
+            Crafting search queries
+          </div>
+          <div class="loader-step" id="loadStep2">
+            <div class="loader-step-dot"></div>
+            Searching TEDx channel
+          </div>
+          <div class="loader-step" id="loadStep3">
+            <div class="loader-step-dot"></div>
+            Ranking top matches
+          </div>
+          <div class="loader-step" id="loadStep4">
+            <div class="loader-step-dot"></div>
+            Preparing results
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hidden" id="stepResults">
+      <div class="results-header">
+        <div class="step-eyebrow">Your recommendations</div>
+        <div class="step-title">Talks aligned with your idea</div>
+        <div class="results-count" id="resultsCount"></div>
+      </div>
+
+      <div id="resultsContainer"></div>
+
+      <div class="restart-row">
+        <button class="restart-btn" onclick="restart()">Start a new search</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let leadId = null;
+    let userData = {};
+
+    function setProgress(pct) {
+      document.getElementById('progressFill').style.width = pct + '%';
+    }
+
+    function showOnly(id) {
+      ['step1', 'step2', 'stepLoading', 'stepResults'].forEach(s => {
+        document.getElementById(s).classList.toggle('hidden', s !== id);
+      });
+    }
+
+    function setLoaderStep(index, status) {
+      const el = document.getElementById('loadStep' + index);
+      el.classList.remove('active', 'done');
+      if (status) el.classList.add(status);
+    }
+
+    function setLoaderStatus(msg) {
+      document.getElementById('loaderStatus').textContent = msg;
+    }
+
+    function showError(step, msg) {
+      const el = document.getElementById('step' + step + 'Error');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+    }
+
+    function clearError(step) {
+      const el = document.getElementById('step' + step + 'Error');
+      el.classList.add('hidden');
+    }
+
+    async function post(url, body) {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Request failed');
+      return data;
+    }
+
+    async function askClaude(messages, system, max_tokens = 1200) {
+      const data = await post('/api/claude', { messages, system, max_tokens });
+      const text = data.content?.map(c => c.text || '').join('') || '';
+      return text;
+    }
+
+    async function submitGate() {
+      clearError(1);
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+
+      if (!name) return showError(1, 'Please enter your name.');
+      if (!email || !email.includes('@')) return showError(1, 'Please enter a valid email address.');
+
+      const btn = document.getElementById('step1Btn');
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+
+      try {
+        const result = await post('/api/leads', { name, email });
+        leadId = result.id;
+        userData = { name, email };
+        setProgress(50);
+        showOnly('step2');
+      } catch (err) {
+        showError(1, 'Something went wrong. Please try again.');
+        console.error(err);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Continue <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      }
+    }
+
+    function goBack() {
+      setProgress(0);
+      showOnly('step1');
+    }
+
+    async function submitTalk() {
+      clearError(2);
+      const talkTitle = document.getElementById('talkTitle').value.trim();
+      const mainIdea = document.getElementById('mainIdea').value.trim();
+      const themes = document.getElementById('themes').value.trim();
+      const audience = document.getElementById('audience').value.trim();
+
+      if (!talkTitle) return showError(2, 'Please enter your talk title.');
+      if (!mainIdea) return showError(2, 'Please describe your main idea.');
+
+      showOnly('stepLoading');
+      setProgress(60);
+      [1,2,3,4].forEach(i => setLoaderStep(i, ''));
+
+      try {
+        setLoaderStatus('Crafting search queries…');
+        setLoaderStep(1, 'active');
+
+        const queriesText = await askClaude([
+          {
+            role: 'user',
+            content: `I am preparing a TEDx talk with the following details:
+Title: ${talkTitle}
+Main idea: ${mainIdea}
+Themes: ${themes || 'not specified'}
+Target audience: ${audience || 'not specified'}
+
+Generate exactly 4 YouTube search queries I can use to find related TEDx talks on the official TEDx channel. The queries should approach the topic from different angles to maximise discovery.
+
+Respond with ONLY a JSON array of 4 strings. No explanation, no markdown. Example format:
+["query one", "query two", "query three", "query four"]`,
+          }
+        ]);
+
+        setLoaderStep(1, 'done');
+
+        let queries;
+        try {
+          const cleaned = queriesText.replace(/```json|```/g, '').trim();
+          queries = JSON.parse(cleaned);
+          if (!Array.isArray(queries)) throw new Error('Not an array');
+        } catch {
+          queries = [talkTitle, themes || talkTitle, mainIdea.substring(0, 60)];
+        }
+
+        setLoaderStatus('Searching TEDx channel…');
+        setLoaderStep(2, 'active');
+        setProgress(75);
+
+        const { videos } = await post('/api/youtube', { queries });
+        setLoaderStep(2, 'done');
+
+        if (!videos || videos.length === 0) {
+          throw new Error('No TEDx talks found. Try adjusting your themes or main idea.');
+        }
+
+        setLoaderStatus('Ranking top matches…');
+        setLoaderStep(3, 'active');
+        setProgress(88);
+
+        const videoList = videos.slice(0, 30).map((v, i) =>
+          `${i+1}. ID: ${v.videoId} | Title: ${v.title} | Description: ${v.description?.substring(0, 120) || ''}`
+        ).join('\n');
+
+        const rankingText = await askClaude([
+          {
+            role: 'user',
+            content: `I am preparing a TEDx talk titled "${talkTitle}".
+My main idea: ${mainIdea}
+My themes: ${themes || 'not specified'}
+My target audience: ${audience || 'not specified'}
+
+Here are TEDx talks found on YouTube:
+${videoList}
+
+Select the top 5 most relevant talks and rank them. For each, write one clear sentence explaining why it is relevant to my talk.
+
+Respond ONLY with a JSON array of exactly 5 objects. No markdown. Format:
+[
+  {
+    "videoId": "abc123",
+    "rank": 1,
+    "matchLevel": "high",
+    "reason": "One sentence explaining the relevance."
+  }
+]
+
+matchLevel must be one of: "high", "medium", "low".`
+          }
+        ], null, 1500);
+
+        setLoaderStep(3, 'done');
+
+        let ranked;
+        try {
+          const cleaned = rankingText.replace(/```json|```/g, '').trim();
+          ranked = JSON.parse(cleaned);
+        } catch {
+          throw new Error('Could not parse ranking results. Please try again.');
+        }
+
+        setLoaderStatus('Preparing results…');
+        setLoaderStep(4, 'active');
+        setProgress(95);
+
+        if (leadId) {
+          await post('/api/leads', {
+            update_id: leadId,
+            talk_title: talkTitle,
+            themes: themes || mainIdea.substring(0, 200),
+          }).catch(() => {});
+        }
+
+        setLoaderStep(4, 'done');
+        setProgress(100);
+
+        const videoById = {};
+        videos.forEach(v => { videoById[v.videoId] = v; });
+        displayResults(ranked, videoById);
+
+      } catch (err) {
+        console.error(err);
+        showOnly('step2');
+        showError(2, err.message || 'Something went wrong. Please try again.');
+      }
+    }
+
+    function displayResults(ranked, videoById) {
+      const container = document.getElementById('resultsContainer');
+      container.innerHTML = '';
+
+      const validResults = ranked.filter(r => videoById[r.videoId]);
+
+      document.getElementById('resultsCount').textContent =
+        `${validResults.length} talk${validResults.length !== 1 ? 's' : ''} matched to your idea`;
+
+      validResults.forEach((result) => {
+        const video = videoById[result.videoId];
+        const badgeClass = result.matchLevel === 'high' ? 'match-high' :
+                           result.matchLevel === 'medium' ? 'match-medium' : 'match-low';
+        const badgeLabel = result.matchLevel === 'high' ? 'Strong match' :
+                           result.matchLevel === 'medium' ? 'Good match' : 'Related';
+
+        const card = document.createElement('div');
+        card.className = 'talk-card';
+        card.innerHTML = `
+          <a href="${video.url}" target="_blank" rel="noopener">
+            <img class="talk-thumbnail" src="${video.thumbnail}" alt="${escHtml(video.title)}" loading="lazy" />
+          </a>
+          <div class="talk-body">
+            <div class="talk-rank-row">
+              <div class="talk-rank">#${result.rank}</div>
+              <div class="match-badge ${badgeClass}">${badgeLabel}</div>
+            </div>
+            <div class="talk-title">${escHtml(video.title)}</div>
+            <div class="talk-reason">${escHtml(result.reason)}</div>
+            <div class="talk-channel">${escHtml(video.channelTitle || 'TEDx Talks')}</div>
+            <a class="watch-link" href="${video.url}" target="_blank" rel="noopener">
+              Watch on YouTube
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7h9M8 3.5l3.5 3.5L8 10.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      if (validResults.length === 0) {
+        container.innerHTML = '<div class="error-box">No matching talks could be displayed. Please try a different description.</div>';
+      }
+
+      showOnly('stepResults');
+    }
+
+    function escHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function restart() {
+      leadId = null;
+      userData = {};
+      document.getElementById('name').value = '';
+      document.getElementById('email').value = '';
+      document.getElementById('talkTitle').value = '';
+      document.getElementById('mainIdea').value = '';
+      document.getElementById('themes').value = '';
+      document.getElementById('audience').value = '';
+      setProgress(0);
+      showOnly('step1');
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        if (!document.getElementById('step1').classList.contains('hidden')) {
+          submitGate();
+        }
+      }
+    });
+  </script>
+
+</body>
+</html>
