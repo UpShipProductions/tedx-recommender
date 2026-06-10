@@ -1,4 +1,4 @@
-import postgres from 'postgres';
+const postgres = require('postgres');
 
 const sql = postgres(process.env.POSTGRES_URL, { ssl: 'require' });
 
@@ -15,7 +15,7 @@ async function ensureTable() {
   `;
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -45,4 +45,10 @@ export default async function handler(req, res) {
       RETURNING id
     `;
 
-    const ne
+    const newId = result.rows[0].id;
+    return res.status(200).json({ success: true, id: newId });
+  } catch (err) {
+    console.error('Leads DB error:', err);
+    return res.status(500).json({ error: 'Database error', details: err.message });
+  }
+}
